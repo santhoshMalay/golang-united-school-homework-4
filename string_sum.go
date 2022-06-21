@@ -26,37 +26,52 @@ var (
 // Use the errors defined above as described, again wrapping into fmt.Errorf
 
 func StringSum(input string) (output string, err error) {
+	errEmpty := fmt.Errorf("%s", errorEmptyInput)
+	errMoreLess := fmt.Errorf("%s", errorNotTwoOperands)
+
 	input = strings.ReplaceAll(input, " ", "")
 	strLen := len(input)
 	if strLen == 0 {
-		err := fmt.Errorf("%s", errorEmptyInput)
-		return "", err
+		return "", errEmpty
 	}
 
-	num2, err1 := strconv.Atoi(string(input[strLen-1]))
+	addSymbol := strings.ContainsAny(input, "-")
+	subSymbol := strings.ContainsAny(input, "+")
+
+	if addSymbol == false && subSymbol == false {
+		return "", errMoreLess
+	}
+
+	startIndex := 0
+	if strings.HasPrefix(input, "-") == true {
+		startIndex = 1
+	}
+
+	num1, digitsInNum1, sum, operand := 0, 0, 0, 0
+	for x := startIndex; x < strLen; x++ {
+		if input[x] >= 48 && input[x] <= 57 {
+			digitsInNum1 = x + 1
+		} else {
+			operand = int(input[x])
+			num2, err1 := strconv.Atoi(string(input[x+1 : strLen]))
+			if err1 != nil {
+				return "", errMoreLess
+			}
+			sum += num2
+			break
+		}
+	}
+	num1, err1 := strconv.Atoi(string(input[0:digitsInNum1]))
 	if err1 != nil {
-		err := fmt.Errorf("%s", errorNotTwoOperands)
-		return "", err
+		return "", errMoreLess
 	}
-
-	num1, err2 := strconv.Atoi(string(input[strLen-3]))
-	if err2 != nil {
-		err := fmt.Errorf("%s", errorNotTwoOperands)
-		return "", err
-	}
-
-	if strings.HasPrefix(input, "-") {
-		num1 *= -1
-	}
-
-	var sum = 0
-	if string(input[strLen-2]) == "+" {
-		sum = num1 + num2
-	} else if string(input[strLen-2]) == "-" {
-		sum = num1 - num2
+	if operand == 43 {
+		sum += num1
+	} else if operand == 45 {
+		sum = num1 - sum
 	} else {
-		err = fmt.Errorf("%s", errorNotTwoOperands)
-		return "", err
+		return "", errMoreLess
 	}
+
 	return strconv.Itoa(sum), nil
 }
